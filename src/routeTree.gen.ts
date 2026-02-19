@@ -9,12 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './pages/__root'
+import { Route as LoginRouteImport } from './pages/login'
 import { Route as AppLayoutRouteImport } from './pages/_app/layout'
 import { Route as AppIndexRouteImport } from './pages/_app/index'
 import { Route as AppSimulateRouteImport } from './pages/_app/simulate'
+import { Route as AppIntegrationsRouteImport } from './pages/_app/integrations'
 import { Route as AppFlowBuilderRouteImport } from './pages/_app/flow-builder'
 import { Route as AppChatBuilderRouteImport } from './pages/_app/chat-builder'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppLayoutRoute = AppLayoutRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -27,6 +34,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppSimulateRoute = AppSimulateRouteImport.update({
   id: '/simulate',
   path: '/simulate',
+  getParentRoute: () => AppLayoutRoute,
+} as any)
+const AppIntegrationsRoute = AppIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
   getParentRoute: () => AppLayoutRoute,
 } as any)
 const AppFlowBuilderRoute = AppFlowBuilderRouteImport.update({
@@ -42,44 +54,72 @@ const AppChatBuilderRoute = AppChatBuilderRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/login': typeof LoginRoute
   '/chat-builder': typeof AppChatBuilderRoute
   '/flow-builder': typeof AppFlowBuilderRoute
+  '/integrations': typeof AppIntegrationsRoute
   '/simulate': typeof AppSimulateRoute
 }
 export interface FileRoutesByTo {
+  '/login': typeof LoginRoute
   '/chat-builder': typeof AppChatBuilderRoute
   '/flow-builder': typeof AppFlowBuilderRoute
+  '/integrations': typeof AppIntegrationsRoute
   '/simulate': typeof AppSimulateRoute
   '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppLayoutRouteWithChildren
+  '/login': typeof LoginRoute
   '/_app/chat-builder': typeof AppChatBuilderRoute
   '/_app/flow-builder': typeof AppFlowBuilderRoute
+  '/_app/integrations': typeof AppIntegrationsRoute
   '/_app/simulate': typeof AppSimulateRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chat-builder' | '/flow-builder' | '/simulate'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/chat-builder'
+    | '/flow-builder'
+    | '/integrations'
+    | '/simulate'
   fileRoutesByTo: FileRoutesByTo
-  to: '/chat-builder' | '/flow-builder' | '/simulate' | '/'
+  to:
+    | '/login'
+    | '/chat-builder'
+    | '/flow-builder'
+    | '/integrations'
+    | '/simulate'
+    | '/'
   id:
     | '__root__'
     | '/_app'
+    | '/login'
     | '/_app/chat-builder'
     | '/_app/flow-builder'
+    | '/_app/integrations'
     | '/_app/simulate'
     | '/_app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppLayoutRoute: typeof AppLayoutRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -99,6 +139,13 @@ declare module '@tanstack/react-router' {
       path: '/simulate'
       fullPath: '/simulate'
       preLoaderRoute: typeof AppSimulateRouteImport
+      parentRoute: typeof AppLayoutRoute
+    }
+    '/_app/integrations': {
+      id: '/_app/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof AppIntegrationsRouteImport
       parentRoute: typeof AppLayoutRoute
     }
     '/_app/flow-builder': {
@@ -121,6 +168,7 @@ declare module '@tanstack/react-router' {
 interface AppLayoutRouteChildren {
   AppChatBuilderRoute: typeof AppChatBuilderRoute
   AppFlowBuilderRoute: typeof AppFlowBuilderRoute
+  AppIntegrationsRoute: typeof AppIntegrationsRoute
   AppSimulateRoute: typeof AppSimulateRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -128,6 +176,7 @@ interface AppLayoutRouteChildren {
 const AppLayoutRouteChildren: AppLayoutRouteChildren = {
   AppChatBuilderRoute: AppChatBuilderRoute,
   AppFlowBuilderRoute: AppFlowBuilderRoute,
+  AppIntegrationsRoute: AppIntegrationsRoute,
   AppSimulateRoute: AppSimulateRoute,
   AppIndexRoute: AppIndexRoute,
 }
@@ -138,6 +187,7 @@ const AppLayoutRouteWithChildren = AppLayoutRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AppLayoutRoute: AppLayoutRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

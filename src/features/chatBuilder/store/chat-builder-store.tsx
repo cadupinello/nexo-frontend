@@ -22,7 +22,7 @@ interface ChatBuilderState {
   chats: ChatSettings[]
   activeChatId: string
   setSettings: <K extends keyof ChatSettings>(key: K, value: ChatSettings[K]) => void
-  addChat: (name: string) => void
+  setFullSettings: (id: string, settings: ChatSettings) => void
   setActiveChat: (id: string) => void
   getActiveSettings: () => ChatSettings
 }
@@ -60,9 +60,16 @@ export const useChatBuilderStore = create<ChatBuilderState>()(
         )
       })),
 
-      addChat: (name) => set((state) => {
-        const newChat = { ...DEFAULT_CHAT, id: Math.random().toString(36).substring(7), name }
-        return { chats: [...state.chats, newChat], activeChatId: newChat.id }
+      setFullSettings: (id, settings) => set((state) => {
+        const exists = state.chats.find(c => c.id === id)
+        if (exists) {
+          return {
+            chats: state.chats.map(c => c.id === id ? settings : c)
+          }
+        }
+        return {
+          chats: [...state.chats, settings]
+        }
       }),
 
       setActiveChat: (id) => set({ activeChatId: id })

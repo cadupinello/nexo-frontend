@@ -1,8 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { Loader2, MessageSquareOff, Plus } from 'lucide-react'
+import { useEffect } from 'react'
+import { usePostChat } from '../../api/mutations/usePostChat'
+import { useGetChats } from '../../api/queries/useGetChats'
 import { SettingsPanel } from '../../features/chatBuilder/components/SettingsPanel'
 import { WidgetPreview } from '../../features/chatBuilder/components/WidgetPreview'
 import { useChatBuilderStore } from '../../features/chatBuilder/store/chat-builder-store'
+import { useWorkspaceStore } from '../../features/workspaces/store/workspace-store'
 import { Header } from '../../shared/components/layout/Header'
 
 export const Route = createFileRoute('/_app/chat-builder')({
@@ -10,11 +14,47 @@ export const Route = createFileRoute('/_app/chat-builder')({
 })
 
 function RouteComponent() {
-  const { chats, activeChatId, setActiveChat, addChat } = useChatBuilderStore()
+  const { activeWorkspaceId } = useWorkspaceStore()
+  const { data: chats, isLoading } = useGetChats(activeWorkspaceId || undefined)
+  const { mutate: createChat, isPending: isCreating } = usePostChat()
+  const { activeChatId, setActiveChat, setFullSettings } = useChatBuilderStore()
+
+  useEffect(() => {
+    if (chats && chats.length > 0) {
+      if (!activeChatId || !chats.find(c => c.id === activeChatId)) {
+        setActiveChat(chats[0].id)
+      }
+
+      const activeChat = chats.find(c => c.id === activeChatId)
+      if (activeChat) {
+        // Merge model fields into store
+        setFullSettings(activeChat.id, {
+          ...activeChat.settings,
+          id: activeChat.id,
+          name: activeChat.name
+        })
+      }
+    }
+  }, [chats, activeChatId, setActiveChat, setFullSettings])
 
   const handleCreateChat = () => {
     const name = prompt("Nome do novo chat:")
-    if (name) addChat(name)
+    if (name && activeWorkspaceId) {
+      createChat({ name, workspaceId: activeWorkspaceId }, {
+        onSuccess: (newChat) => {
+          setActiveChat(newChat.id)
+        }
+      })
+    }
+  }
+
+  if (!activeWorkspaceId) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center gap-4 text-text-secondary">
+        <MessageSquareOff size={48} />
+        <p className="font-bold">Selecione um Workspace para gerenciar chats</p>
+      </div>
+    )
   }
 
   return (
@@ -42,7 +82,7 @@ function RouteComponent() {
                   backgroundSize: "12px",
                 }}
               >
-                {chats.map((chat) => (
+                {chats?.map((chat: any) => (
                   <option key={chat.id} value={chat.id}>
                     {chat.name}
                   </option>
@@ -52,17 +92,34 @@ function RouteComponent() {
 
             <button
               onClick={handleCreateChat}
+              disabled={isCreating}
               className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold border border-primary/20 rounded-lg hover:brightness-110 shadow-lg shadow-primary/20 transition-all h-9"
             >
-              <Plus size={16} />
+              {isCreating ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
               Novo Chat
             </button>
           </div>
         }
       />
       <div className='flex-1 flex overflow-hidden'>
-        <SettingsPanel />
-        <WidgetPreview />
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <Loader2 size={32} className="animate-spin text-primary" />
+          </div>
+        ) : chats && chats.length > 0 ? (
+          <>
+            <SettingsPanel />
+            <WidgetPreview />
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 text-text-secondary">
+            <MessageSquareOff size={48} />
+            <p className="font-bold">Crie seu primeiro chat para começar</p>
+            <button onClick={handleCreateChat} className="text-primary font-bold hover:underline">
+              + Criar Chat
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

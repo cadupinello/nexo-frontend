@@ -2,12 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, RefreshCcw, Terminal } from "lucide-react";
 import { useEffect } from "react";
 
-import { useChatBuilderStore } from "../../features/chatBuilder/store/chat-builder-store";
 import { ExecutionPath } from "../../features/flow/components/ExecutionPath";
 import { SimulationChat } from "../../features/flow/components/SimulationChat";
 import { useFlowExecutor } from "../../features/flow/engine/flow.executor";
-import { useFlowStore } from "../../features/flow/store/flow.store";
 import { Header } from "../../shared/components/layout/Header";
+
+import { useGetChats } from "../../api/queries/useGetChats";
+import { useFlowStore } from "../../features/flow/store/flow.store";
+import { useWorkspaceStore } from "../../features/workspaces/store/workspace-store";
 
 export const Route = createFileRoute("/_app/simulate")({
   component: RouteComponent,
@@ -25,7 +27,8 @@ function RouteComponent() {
     setSelectedChatId,
   } = useFlowStore();
 
-  const { chats } = useChatBuilderStore();
+  const { activeWorkspaceId } = useWorkspaceStore()
+  const { data: chats = [] } = useGetChats(activeWorkspaceId || undefined)
 
   useFlowExecutor();
 

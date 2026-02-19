@@ -1,9 +1,15 @@
+import { Loader2, Save } from "lucide-react";
+import { usePatchChatSettings } from "../../../api/mutations/usePatchChatSettings";
 import { useChatBuilderStore } from "../store/chat-builder-store";
 
 
 export function SettingsPanel() {
   const { getActiveSettings, setSettings } = useChatBuilderStore()
+  const { mutate: save, isPending } = usePatchChatSettings()
+
+  const settings = getActiveSettings()
   const {
+    id,
     name,
     botName,
     welcomeMessage,
@@ -16,13 +22,23 @@ export function SettingsPanel() {
     userBubbleColor,
     botBubbleColor,
     botTextColor
-  } = getActiveSettings()
+  } = settings
 
   return (
-    <div className="w-80 border-r border-border-ui bg-bg-start p-6 flex flex-col gap-6 overflow-y-auto">
-      <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-primary opacity-80">
-        Customização
-      </h2>
+    <div className="w-80 border-r border-border-ui bg-bg-start p-6 flex flex-col gap-6 overflow-y-auto relative">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-primary opacity-80">
+          Customização
+        </h2>
+        <button
+          onClick={() => save({ id, settings })}
+          disabled={isPending}
+          className="p-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-all disabled:opacity-50"
+          title="Salvar Alterações"
+        >
+          {isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+        </button>
+      </div>
 
       <div className="space-y-6">
         <div className="flex flex-col gap-2">

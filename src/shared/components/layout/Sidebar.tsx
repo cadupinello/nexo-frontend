@@ -1,8 +1,23 @@
-import { Link } from "@tanstack/react-router";
-import { Flame, Settings } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Flame, LogOut, Settings } from "lucide-react";
 import type { ElementType, ReactNode } from "react";
+import { WorkspaceSelector } from "../../../features/workspaces/components/WorkspaceSelector";
+import { authClient } from "../../../lib/auth-client";
 
 export function Sidebar({ children }: { children: ReactNode }) {
+  const { data: session } = authClient.useSession();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          navigate({ to: "/login" });
+        }
+      }
+    });
+  };
+
   return (
     <aside className="w-72 shrink-0 border-r border-border-ui bg-bg-start flex flex-col">
       <div className="h-16 flex items-center gap-3 px-4 mb-2">
@@ -24,38 +39,35 @@ export function Sidebar({ children }: { children: ReactNode }) {
       </nav>
 
       <div className="mt-auto p-4 flex flex-col gap-4 border-t border-border-ui/30">
-        <div className="bg-panel/40 border border-border-ui p-4 rounded-xl flex flex-col gap-1">
-          <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">
-            Workspace
-          </span>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-text-primary">
-              Acme Corp
-            </span>
-            <span className="bg-primary/10 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded border border-primary/20">
-              PRO PLAN
-            </span>
-          </div>
-        </div>
+        <WorkspaceSelector />
 
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-panel border border-border-ui flex items-center justify-center text-xs font-bold text-text-secondary overflow-hidden">
               <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user?.name || "Guest"}`}
                 alt="User"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-text-primary">
-                Alex Silva
+              <span className="text-sm font-bold text-text-primary truncate max-w-[120px]">
+                {session?.user?.name || "Usuário"}
               </span>
             </div>
           </div>
-          <button className="text-text-secondary hover:text-text-primary hover:rotate-90 transition-all duration-300 cursor-pointer">
-            <Settings size={18} />
-          </button>
+          <div className="flex gap-2">
+            <button className="text-text-secondary hover:text-text-primary hover:rotate-90 transition-all duration-300 cursor-pointer">
+              <Settings size={18} />
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-text-secondary hover:text-danger hover:scale-110 transition-all duration-300 cursor-pointer"
+              title="Sair"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
         </div>
       </div>
     </aside>

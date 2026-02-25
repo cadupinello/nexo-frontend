@@ -6,6 +6,7 @@ import { ExecutionPath } from "../../features/flow/components/ExecutionPath";
 import { SimulationChat } from "../../features/flow/components/SimulationChat";
 import { useFlowExecutor } from "../../features/flow/engine/flow.executor";
 import { Header } from "../../shared/components/layout/Header";
+import { Select } from "../../shared/components/ui/Select";
 
 import { useGetChats } from "../../api/queries/useGetChats";
 import { useFlowStore } from "../../features/flow/store/flow.store";
@@ -25,6 +26,8 @@ function RouteComponent() {
     setActiveNodeId,
     selectedChatId,
     setSelectedChatId,
+    simulationVariables,
+    clearSimulationVariables,
   } = useFlowStore();
 
   const { activeWorkspaceId } = useWorkspaceStore()
@@ -38,6 +41,7 @@ function RouteComponent() {
 
   const handleRestart = () => {
     setMode("edit");
+    clearSimulationVariables();
     setTimeout(() => setMode("simulate"), 50);
   };
 
@@ -65,12 +69,12 @@ function RouteComponent() {
                 >
                   <div
                     className="absolute top-0 right-0 w-32 h-32 opacity-10 group-hover:opacity-20 transition-opacity blur-3xl rounded-full"
-                    style={{ backgroundColor: chat.mainColor }}
+                    style={{ backgroundColor: chat.settings?.mainColor }}
                   />
 
                   <div className="flex items-center gap-4 mb-6">
                     <div
-                      style={{ backgroundColor: chat.mainColor }}
+                      style={{ backgroundColor: chat.settings?.mainColor }}
                       className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg"
                     >
                       <Terminal size={24} />
@@ -80,20 +84,20 @@ function RouteComponent() {
                         {chat.name}
                       </h3>
                       <span className="text-xs font-medium text-text-secondary uppercase tracking-widest opacity-60">
-                        {chat.botName}
+                        {chat.settings?.botName}
                       </span>
                     </div>
                   </div>
 
                   <p className="text-sm text-text-secondary line-clamp-2 mb-8 leading-relaxed">
-                    "{chat.welcomeMessage}"
+                    "{chat.settings?.welcomeMessage}"
                   </p>
 
                   <div className="mt-auto flex items-center justify-between">
                     <div className="flex -space-x-2">
-                      <div style={{ backgroundColor: chat.headerBackgroundColor }} className="w-4 h-4 rounded-full border border-bg-start" />
-                      <div style={{ backgroundColor: chat.userBubbleColor }} className="w-4 h-4 rounded-full border border-bg-start" />
-                      <div style={{ backgroundColor: chat.mainColor }} className="w-4 h-4 rounded-full border border-bg-start" />
+                      <div style={{ backgroundColor: chat.settings?.headerBackgroundColor }} className="w-4 h-4 rounded-full border border-bg-start" />
+                      <div style={{ backgroundColor: chat.settings?.userBubbleColor }} className="w-4 h-4 rounded-full border border-bg-start" />
+                      <div style={{ backgroundColor: chat.settings?.mainColor }} className="w-4 h-4 rounded-full border border-bg-start" />
                     </div>
                     <span className="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
                       Simular Fluxo →
@@ -129,17 +133,10 @@ function RouteComponent() {
                   Chat Ativo:
                 </span>
               </div>
-              <select
+              <Select
                 value={selectedChatId || ""}
                 onChange={(e) => setSelectedChatId(e.target.value)}
-                className="bg-transparent border-none outline-none text-xs font-medium px-2 py-1 pr-8 text-text-primary appearance-none cursor-pointer hover:bg-white/5 transition-colors h-full min-w-30"
-                style={{
-                  backgroundImage:
-                    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")",
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 8px center",
-                  backgroundSize: "12px",
-                }}
+                className="border-none bg-transparent h-full px-2 text-xs font-medium min-w-30"
               >
                 <option value="">Padrão (Builder)</option>
                 {chats.map((chat) => (
@@ -147,7 +144,7 @@ function RouteComponent() {
                     {chat.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div className="flex items-center bg-panel border border-border-ui rounded-lg overflow-hidden h-9">
@@ -156,17 +153,10 @@ function RouteComponent() {
                   Pular para:
                 </span>
               </div>
-              <select
+              <Select
                 value=""
                 onChange={(e) => handleJumpToNode(e.target.value)}
-                className="bg-transparent border-none outline-none text-xs font-medium px-2 py-1 pr-8 text-text-primary appearance-none cursor-pointer hover:bg-white/5 transition-colors h-full min-w-30"
-                style={{
-                  backgroundImage:
-                    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")",
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 8px center",
-                  backgroundSize: "12px",
-                }}
+                className="border-none bg-transparent h-full px-2 text-xs font-medium min-w-30"
               >
                 <option value="">Selecione...</option>
                 {nodes
@@ -176,7 +166,7 @@ function RouteComponent() {
                       {node.data.label as string}
                     </option>
                   ))}
-              </select>
+              </Select>
             </div>
 
             <button
@@ -196,6 +186,37 @@ function RouteComponent() {
           </div>
         }
       />
+
+
+      <div className="px-6 py-3 border-b border-border-ui bg-panel/20 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex bg-bg-start p-1 rounded-xl border border-border-ui shadow-inner">
+            <button
+              onClick={() => useFlowStore.getState().setEngineSource("local")}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${useFlowStore.getState().engineSource === "local"
+                ? "bg-primary text-white shadow-lg"
+                : "text-text-secondary hover:text-text-primary"
+                }`}
+            >
+              Simulação Local
+            </button>
+            <button
+              onClick={() => useFlowStore.getState().setEngineSource("socket")}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${useFlowStore.getState().engineSource === "socket"
+                ? "bg-warning text-white shadow-lg"
+                : "text-text-secondary hover:text-text-primary"
+                }`}
+            >
+              Live Socket (Backend)
+            </button>
+          </div>
+          <span className="text-[10px] text-text-secondary font-medium uppercase tracking-widest pl-2">
+            {useFlowStore.getState().engineSource === "local"
+              ? "• Executando lógica local no navegador"
+              : "• Conectado via Socket ao Backend (app.ts)"}
+          </span>
+        </div>
+      </div>
 
       <div className="flex-1 flex overflow-hidden p-6 gap-6">
         <div className="w-80 flex flex-col gap-6 animate-in slide-in-from-left-8 duration-700">
@@ -236,22 +257,18 @@ function RouteComponent() {
               </h4>
             </div>
 
-            {/* <div className="flex-1 bg-black/20 rounded-2xl p-4 font-mono text-[11px] text-text-secondary overflow-y-auto space-y-2">
-              <div className="text-primary/70">{"{"}</div>
-              <div className="pl-4">"user_id": "usr_9421",</div>
-              <div className="pl-4">"platform": "whatsapp",</div>
-              <div className="pl-4">"language": "pt-BR",</div>
-              <div className="pl-4">"variables": {"{"}</div>
-              <div className="pl-8 text-text-primary">"nome": "Usuário Teste",</div>
-              <div className="pl-8 text-text-primary">"saldo": 150.00</div>
-              <div className="pl-4">{"}"},</div>
-              <div className="pl-4">"current_step": "verification"</div>
-              <div className="text-primary/70">{"}"}</div>
-            </div> */}
+            <div className="flex-1 bg-black/20 rounded-2xl p-4 font-mono text-[11px] text-text-secondary overflow-y-auto">
+              <pre className="whitespace-pre-wrap break-words text-primary/70">
+                {JSON.stringify({ variables: simulationVariables }, null, 2)}
+              </pre>
+            </div>
 
             <div className="mt-4 pt-4 border-t border-border-ui/50">
-              <button className="w-full py-2 bg-white/5 hover:bg-white/10 border border-border-ui/50 rounded-xl text-[10px] font-bold uppercase tracking-widest text-text-secondary transition-all">
-                Inspecionar Variáveis
+              <button
+                onClick={clearSimulationVariables}
+                className="w-full py-2 bg-white/5 hover:bg-white/10 border border-border-ui/50 rounded-xl text-[10px] font-bold uppercase tracking-widest text-text-secondary transition-all"
+              >
+                Limpar Variáveis
               </button>
             </div>
           </div>

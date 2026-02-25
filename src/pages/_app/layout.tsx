@@ -1,9 +1,17 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 
-import { GitGraph, LayoutDashboardIcon, Loader2, MessageSquare, Play, Send } from "lucide-react";
+import {
+  BookOpen,
+  GitGraph,
+  LayoutDashboardIcon,
+  MessageSquare,
+  Play,
+  Send
+} from "lucide-react";
 import { useEffect } from "react";
 import { authClient } from "../../lib/auth-client";
 import { Sidebar, SidebarItem } from "../../shared/components/layout/Sidebar";
+import { LoadingSpinner } from "../../shared/components/ui/LoadingSpinner";
 
 export const Route = createFileRoute("/_app")({
   component: LayoutDashboard,
@@ -16,6 +24,11 @@ const itemsNav = [
     icon: LayoutDashboardIcon,
   },
   {
+    to: "/chat-builder",
+    title: "Chat Builder",
+    icon: MessageSquare,
+  },
+  {
     to: "/flow-builder",
     title: "Flow Builder",
     icon: GitGraph,
@@ -26,14 +39,14 @@ const itemsNav = [
     icon: Play,
   },
   {
-    to: "/chat-builder",
-    title: "Chat Builder",
-    icon: MessageSquare,
-  },
-  {
     to: "/integrations",
     title: "Integrations",
     icon: Send,
+  },
+  {
+    to: "/docs",
+    title: "Docs",
+    icon: BookOpen,
   },
 ];
 
@@ -47,11 +60,14 @@ function LayoutDashboard() {
     }
   }, [session, isPending, navigate]);
 
+
   if (isPending) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-bg-start text-primary gap-4">
-        <Loader2 className="w-10 h-10 animate-spin" />
-        <p className="text-text-secondary animate-pulse">Autenticando...</p>
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-bg-start">
+        <LoadingSpinner size={40} />
+        <p className="animate-pulse text-xs font-black uppercase tracking-widest text-text-secondary">
+          Autenticando...
+        </p>
       </div>
     );
   }

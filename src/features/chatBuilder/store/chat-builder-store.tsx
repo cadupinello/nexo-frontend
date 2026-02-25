@@ -5,23 +5,26 @@ import { persist } from "zustand/middleware"
 export interface ChatSettings {
   id: string
   name: string
-  botName: string
-  welcomeMessage: string
-  mainColor: string
-  buttonIcon: "default" | "sparkles" | "message"
-  position: "right" | "left"
-  borderRadius: "none" | "medium" | "full"
-  headerBackgroundColor: string
-  headerTextColor: string
-  userBubbleColor: string
-  botBubbleColor: string
-  botTextColor: string
+  settings: {
+    botName: string
+    welcomeMessage: string
+    mainColor: string
+    buttonIcon: "default" | "sparkles" | "message"
+    position: "right" | "left"
+    borderRadius: "none" | "medium" | "full"
+    headerBackgroundColor: string
+    headerTextColor: string
+    userBubbleColor: string
+    botBubbleColor: string
+    botTextColor: string
+  }
 }
 
 interface ChatBuilderState {
   chats: ChatSettings[]
   activeChatId: string
   setSettings: <K extends keyof ChatSettings>(key: K, value: ChatSettings[K]) => void
+  updateSetting: <K extends keyof ChatSettings['settings']>(key: K, value: ChatSettings['settings'][K]) => void
   setFullSettings: (id: string, settings: ChatSettings) => void
   setActiveChat: (id: string) => void
   getActiveSettings: () => ChatSettings
@@ -30,17 +33,19 @@ interface ChatBuilderState {
 const DEFAULT_CHAT: ChatSettings = {
   id: "default",
   name: "Chat Padrão",
-  botName: "Nexo Assistant",
-  welcomeMessage: "Olá! Como posso ajudar você hoje?",
-  mainColor: "#3b82f6",
-  buttonIcon: "default",
-  position: "right",
-  borderRadius: "medium",
-  headerBackgroundColor: "#3b82f6",
-  headerTextColor: "#ffffff",
-  userBubbleColor: "#3b82f6",
-  botBubbleColor: "#f1f5f9",
-  botTextColor: "#1e293b",
+  settings: {
+    botName: "Nexo Assistant",
+    welcomeMessage: "Olá! Como posso ajudar você hoje?",
+    mainColor: "#3b82f6",
+    buttonIcon: "default",
+    position: "right",
+    borderRadius: "medium",
+    headerBackgroundColor: "#3b82f6",
+    headerTextColor: "#ffffff",
+    userBubbleColor: "#3b82f6",
+    botBubbleColor: "#f1f5f9",
+    botTextColor: "#1e293b",
+  }
 }
 
 export const useChatBuilderStore = create<ChatBuilderState>()(
@@ -57,6 +62,14 @@ export const useChatBuilderStore = create<ChatBuilderState>()(
       setSettings: (key, value) => set((state) => ({
         chats: state.chats.map(chat =>
           chat.id === state.activeChatId ? { ...chat, [key]: value } : chat
+        )
+      })),
+
+      updateSetting: (key, value) => set((state) => ({
+        chats: state.chats.map(chat =>
+          chat.id === state.activeChatId
+            ? { ...chat, settings: { ...chat.settings, [key]: value } }
+            : chat
         )
       })),
 

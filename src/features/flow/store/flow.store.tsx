@@ -13,6 +13,7 @@ import {
 } from "@xyflow/react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { type NodeData } from "../../../shared/schemas/flow-schemas";
 
 export type FlowMode = "edit" | "simulate";
 
@@ -33,7 +34,7 @@ interface FlowState {
 
   selectedNodeId: string | null;
   setSelectedNodeId: (id: string | null) => void;
-  updateNodeData: (id: string, data: any) => void;
+  updateNodeData: (id: string, data: Partial<NodeData>) => void;
 
   deleteNode: (id: string) => void;
 
@@ -58,14 +59,25 @@ interface FlowState {
   }) => void;
   clearSimulationLogs: () => void;
   validateFlow: () => void;
+
+  currentSessionId: string | null;
+  setCurrentSessionId: (id: string | null) => void;
+
   waitingForResponse: boolean;
   setWaitingForResponse: (waiting: boolean) => void;
   selectedChatId: string | null;
   setSelectedChatId: (id: string | null) => void;
   flows: Record<string, { nodes: Node[]; edges: Edge[] }>;
+
+  simulationVariables: Record<string, string>;
+  setSimulationVariable: (name: string, value: string) => void;
+  clearSimulationVariables: () => void;
+
+  engineSource: "local" | "socket";
+  setEngineSource: (source: "local" | "socket") => void;
 }
 
-const INITIAL_NODES: Node[] = [
+export const INITIAL_NODES: Node[] = [
   {
     id: "1",
     type: "start",
@@ -223,6 +235,9 @@ export const useFlowStore = create<FlowState>()(
         }
       },
 
+      currentSessionId: null,
+      setCurrentSessionId: (id) => set({ currentSessionId: id }),
+
       waitingForResponse: false,
       setWaitingForResponse: (waiting) => set({ waitingForResponse: waiting }),
 
@@ -230,13 +245,13 @@ export const useFlowStore = create<FlowState>()(
       setSelectedChatId: (id: string | null) => {
         const { flows, nodes, edges, selectedChatId: currentId } = get();
 
-        // 1. Salva o estado atual no chatId anterior (se existia)
+        // Save current state to previous chatId
         const updatedFlows = { ...flows };
         if (currentId) {
           updatedFlows[currentId] = { nodes, edges };
         }
 
-        // 2. Tenta carregar o estado do novo chatId
+        // Load state for new chatId
         const nextFlow = id ? updatedFlows[id] : null;
 
         set({
@@ -244,10 +259,10 @@ export const useFlowStore = create<FlowState>()(
           flows: updatedFlows,
           nodes: nextFlow?.nodes || INITIAL_NODES,
           edges: nextFlow?.edges || [],
-          // Reset da simulação ao trocar de chat
           simulationLogs: [],
           activeNodeId: null,
           waitingForResponse: false,
+          currentSessionId: null,
         });
       },
 
@@ -258,10 +273,22 @@ export const useFlowStore = create<FlowState>()(
             simulationLogs: [],
             activeNodeId: null,
             waitingForResponse: false,
+            simulationVariables: {},
+            currentSessionId: null,
           });
         }
         set({ mode });
       },
+
+      simulationVariables: {},
+      setSimulationVariable: (name, value) =>
+        set((state) => ({
+          simulationVariables: { ...state.simulationVariables, [name]: value },
+        })),
+      clearSimulationVariables: () => set({ simulationVariables: {} }),
+
+      engineSource: "local",
+      setEngineSource: (source) => set({ engineSource: source }),
     }),
     {
       name: "nexo-flow-storage",

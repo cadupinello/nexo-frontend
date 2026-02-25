@@ -11,61 +11,59 @@ export function Sidebar({ children }: { children: ReactNode }) {
   const handleLogout = async () => {
     await authClient.signOut({
       fetchOptions: {
-        onSuccess: () => {
-          navigate({ to: "/login" });
-        }
-      }
+        onSuccess: () => navigate({ to: "/login" }),
+      },
     });
   };
 
   return (
-    <aside className="w-72 shrink-0 border-r border-border-ui bg-bg-start flex flex-col">
-      <div className="h-16 flex items-center gap-3 px-4 mb-2">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary shadow-lg shadow-primary/20">
-          <Flame
-            size={18}
-            className="text-bg-start fill-bg-start"
-            strokeWidth={2.5}
-          />
+    <aside className="flex h-full w-72 flex-col border-r border-border-ui bg-bg-start">
+      <div className="flex h-16 items-center gap-3 px-6">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-lg shadow-primary/20">
+          <Flame size={18} className="fill-bg-start text-bg-start" strokeWidth={2.5} />
         </div>
-
-        <span className="text-lg font-bold tracking-tight text-text-primary">
+        <span className="text-xl font-bold tracking-tight text-text-primary">
           Nexo<span className="text-primary">.</span>
         </span>
       </div>
 
-      <nav className="flex flex-col flex-1 p-4 gap-2 overflow-y-auto">
+      <nav className="menu flex-1 gap-1 overflow-y-auto px-4 py-6 text-text-secondary">
         {children}
       </nav>
 
-      <div className="mt-auto p-4 flex flex-col gap-4 border-t border-border-ui/30">
+      <div className="mt-auto space-y-6 border-t border-border-ui/30 p-6">
         <WorkspaceSelector />
 
-        <div className="flex items-center justify-between px-2">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-panel border border-border-ui flex items-center justify-center text-xs font-bold text-text-secondary overflow-hidden">
-              <img
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user?.name || "Guest"}`}
-                alt="User"
-                className="w-full h-full object-cover"
-              />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="avatar">
+              <div className="w-9 rounded-full ring ring-primary/20 ring-offset-2 ring-offset-bg-start">
+                <img
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user?.name || "Guest"}`}
+                  alt="User"
+                />
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-text-primary truncate max-w-[120px]">
+            <div className="flex flex-col overflow-hidden">
+              <span className="truncate text-xs font-bold text-text-primary">
                 {session?.user?.name || "Usuário"}
+              </span>
+              <span className="truncate text-[9px] uppercase tracking-widest text-text-secondary opacity-50">
+                Plano Free
               </span>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button className="text-text-secondary hover:text-text-primary hover:rotate-90 transition-all duration-300 cursor-pointer">
-              <Settings size={18} />
+
+          <div className="flex gap-1">
+            <button className="btn btn-ghost btn-xs btn-square text-text-secondary hover:text-primary">
+              <Settings size={14} />
             </button>
             <button
               onClick={handleLogout}
-              className="text-text-secondary hover:text-danger hover:scale-110 transition-all duration-300 cursor-pointer"
+              className="btn btn-ghost btn-xs btn-square text-text-secondary hover:text-danger"
               title="Sair"
             >
-              <LogOut size={18} />
+              <LogOut size={14} />
             </button>
           </div>
         </div>
@@ -84,26 +82,16 @@ export function SidebarItem({
   Icon?: ElementType;
 }) {
   return (
-    <Link
-      to={to}
-      activeProps={{
-        className:
-          "bg-primary/10 text-primary border-r-2 border-primary rounded-r-none",
-      }}
-      inactiveProps={{
-        className:
-          "text-text-secondary hover:text-text-primary hover:bg-panel/50",
-      }}
-      className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group"
-    >
-      {Icon && (
-        <Icon
-          size={20}
-          className="group-hover:scale-110 transition-transform"
-        />
-      )}
-
-      <span className="text-sm font-medium">{title}</span>
-    </Link>
+    <li>
+      <Link
+        to={to}
+        activeProps={{ className: "bg-primary/10 text-primary font-bold shadow-sm" }}
+        inactiveProps={{ className: "hover:bg-white/5" }}
+        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group"
+      >
+        {Icon && <Icon size={18} className="group-hover:scale-110 transition-transform" />}
+        <span className="text-sm">{title}</span>
+      </Link>
+    </li>
   );
 }

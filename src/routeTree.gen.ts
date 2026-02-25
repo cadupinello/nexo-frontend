@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './pages/_app/index'
 import { Route as AppSimulateRouteImport } from './pages/_app/simulate'
 import { Route as AppIntegrationsRouteImport } from './pages/_app/integrations'
 import { Route as AppFlowBuilderRouteImport } from './pages/_app/flow-builder'
+import { Route as AppDocsRouteImport } from './pages/_app/docs'
 import { Route as AppChatBuilderRouteImport } from './pages/_app/chat-builder'
 
 const LoginRoute = LoginRouteImport.update({
@@ -46,6 +47,11 @@ const AppFlowBuilderRoute = AppFlowBuilderRouteImport.update({
   path: '/flow-builder',
   getParentRoute: () => AppLayoutRoute,
 } as any)
+const AppDocsRoute = AppDocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => AppLayoutRoute,
+} as any)
 const AppChatBuilderRoute = AppChatBuilderRouteImport.update({
   id: '/chat-builder',
   path: '/chat-builder',
@@ -56,6 +62,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/chat-builder': typeof AppChatBuilderRoute
+  '/docs': typeof AppDocsRoute
   '/flow-builder': typeof AppFlowBuilderRoute
   '/integrations': typeof AppIntegrationsRoute
   '/simulate': typeof AppSimulateRoute
@@ -63,6 +70,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/chat-builder': typeof AppChatBuilderRoute
+  '/docs': typeof AppDocsRoute
   '/flow-builder': typeof AppFlowBuilderRoute
   '/integrations': typeof AppIntegrationsRoute
   '/simulate': typeof AppSimulateRoute
@@ -73,6 +81,7 @@ export interface FileRoutesById {
   '/_app': typeof AppLayoutRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/chat-builder': typeof AppChatBuilderRoute
+  '/_app/docs': typeof AppDocsRoute
   '/_app/flow-builder': typeof AppFlowBuilderRoute
   '/_app/integrations': typeof AppIntegrationsRoute
   '/_app/simulate': typeof AppSimulateRoute
@@ -84,6 +93,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/chat-builder'
+    | '/docs'
     | '/flow-builder'
     | '/integrations'
     | '/simulate'
@@ -91,6 +101,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/chat-builder'
+    | '/docs'
     | '/flow-builder'
     | '/integrations'
     | '/simulate'
@@ -100,6 +111,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/_app/chat-builder'
+    | '/_app/docs'
     | '/_app/flow-builder'
     | '/_app/integrations'
     | '/_app/simulate'
@@ -155,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFlowBuilderRouteImport
       parentRoute: typeof AppLayoutRoute
     }
+    '/_app/docs': {
+      id: '/_app/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof AppDocsRouteImport
+      parentRoute: typeof AppLayoutRoute
+    }
     '/_app/chat-builder': {
       id: '/_app/chat-builder'
       path: '/chat-builder'
@@ -167,6 +186,7 @@ declare module '@tanstack/react-router' {
 
 interface AppLayoutRouteChildren {
   AppChatBuilderRoute: typeof AppChatBuilderRoute
+  AppDocsRoute: typeof AppDocsRoute
   AppFlowBuilderRoute: typeof AppFlowBuilderRoute
   AppIntegrationsRoute: typeof AppIntegrationsRoute
   AppSimulateRoute: typeof AppSimulateRoute
@@ -175,6 +195,7 @@ interface AppLayoutRouteChildren {
 
 const AppLayoutRouteChildren: AppLayoutRouteChildren = {
   AppChatBuilderRoute: AppChatBuilderRoute,
+  AppDocsRoute: AppDocsRoute,
   AppFlowBuilderRoute: AppFlowBuilderRoute,
   AppIntegrationsRoute: AppIntegrationsRoute,
   AppSimulateRoute: AppSimulateRoute,

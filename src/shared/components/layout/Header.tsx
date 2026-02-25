@@ -9,25 +9,22 @@ interface HeaderProps {
 
 export function Header({ title, subtitle, actions, tools }: HeaderProps) {
   return (
-    <header className="h-14 border-b border-border-ui bg-bg-start flex items-center justify-between px-6 sticky top-0 z-10 w-full">
-      <div className="flex items-center gap-4">
-        <h2 className="text-base font-bold text-text-primary tracking-tight">
+    <header className="navbar h-14 border-b border-border-ui bg-bg-start px-6 sticky top-0 z-10">
+      <div className="flex-1 flex items-center gap-4">
+        <h2 className="text-sm font-bold tracking-tight text-text-primary">
           {title}
         </h2>
         {subtitle && (
-          <div className="flex items-center px-2 py-0.5 rounded bg-panel border border-border-ui">
-            <span className="text-[10px] font-semibold text-text-secondary/80 uppercase tracking-widest">
-              {subtitle}
-            </span>
+          <div className="badge badge-outline border-border-ui bg-panel px-2 py-0.5 font-semibold text-[10px] text-text-secondary uppercase tracking-widest h-auto">
+            {subtitle}
           </div>
         )}
       </div>
 
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
-        {tools}
+      <div className="flex-none flex items-center gap-3">
+        {tools && <div className="mr-4">{tools}</div>}
+        {actions}
       </div>
-
-      <div className="flex items-center gap-3">{actions}</div>
     </header>
   );
 }

@@ -1,5 +1,7 @@
 import { RefreshCcw, Send, Terminal, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { usePostSession } from "../../../api/mutations/usePostSession";
+import { useChatSession } from "../../chatBuilder/hooks/useChatSession";
 import { useChatBuilderStore } from "../../chatBuilder/store/chat-builder-store";
 import { useFlowStore } from "../store/flow.store";
 
@@ -16,21 +18,60 @@ export function SimulationChat({ embedded = false }: SimulationChatProps) {
     setWaitingForResponse,
     setMode,
     selectedChatId,
+    engineSource,
+    currentSessionId,
+    setCurrentSessionId,
   } = useFlowStore();
 
+  const { sendMessage, isConnected } = useChatSession(selectedChatId);
+  const { mutate: createSession, isPending: isCreatingSession } = usePostSession();
   const { chats, getActiveSettings } = useChatBuilderStore();
 
+  // Criar sessão se estivermos no modo socket e não houver uma
+  useEffect(() => {
+    if (mode === "simulate" && engineSource === "socket" && selectedChatId && !currentSessionId && !isCreatingSession) {
+      createSession({ chatId: selectedChatId }, {
+        onSuccess: (session: any) => {
+          setCurrentSessionId(session.id);
+          console.log("[SIMULADOR] Sessão backend criada:", session.id);
+        },
+        onError: (error: any) => {
+          console.error("[SIMULADOR] Erro ao criar sessão no backend:", error);
+          addSimulationLog({
+            type: "system",
+            message: "Erro ao conectar com o servidor.",
+          });
+        }
+      });
+    }
+  }, [mode, engineSource, selectedChatId, currentSessionId, createSession, setCurrentSessionId, isCreatingSession, addSimulationLog]);
+
+  // Disparar o fluxo quando a sessão estiver pronta e conectada
+  const hasStartedRef = useRef(false);
+  useEffect(() => {
+    if (engineSource === "socket" && currentSessionId && isConnected && !hasStartedRef.current) {
+      hasStartedRef.current = true;
+      console.log("[SIMULADOR] Iniciando fluxo no backend...");
+      sendMessage("/start");
+    }
+
+    if (!currentSessionId) {
+      hasStartedRef.current = false;
+    }
+  }, [engineSource, currentSessionId, isConnected, sendMessage]);
+
   const chatSettings = chats.find(c => c.id === selectedChatId) || getActiveSettings();
+  const settings = chatSettings?.settings || (chatSettings as any);
 
   const {
-    botName,
-    headerBackgroundColor,
-    headerTextColor,
-    userBubbleColor,
-    botBubbleColor,
-    botTextColor,
-    mainColor
-  } = chatSettings;
+    botName = "Assistant",
+    headerBackgroundColor = "#3b82f6",
+    headerTextColor = "#ffffff",
+    userBubbleColor = "#3b82f6",
+    botBubbleColor = "#f1f5f9",
+    botTextColor = "#1e293b",
+    mainColor = "#3b82f6"
+  } = settings;
 
   const [inputValue, setInputValue] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -45,13 +86,39 @@ export function SimulationChat({ embedded = false }: SimulationChatProps) {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    addSimulationLog({
-      type: "user",
-      message: inputValue.trim(),
-    });
+    const message = inputValue.trim();
+
+    if (engineSource === "local") {
+      // Lógica local (Mock)
+      const currentStore = useFlowStore.getState();
+      const activeNode = currentStore.nodes.find(n => n.id === currentStore.activeNodeId);
+
+      if (activeNode?.data?.saveVariable) {
+        currentStore.setSimulationVariable(activeNode.data.saveVariable as string, message);
+      }
+
+      addSimulationLog({
+        type: "user",
+        message: message,
+      });
+
+      setWaitingForResponse(false);
+    } else {
+      // Lógica Socket (Real)
+      if (!isConnected) {
+        console.error("Socket não está conectado!");
+        return;
+      }
+
+      addSimulationLog({
+        type: "user",
+        message: message,
+      });
+
+      sendMessage(message);
+    }
 
     setInputValue("");
-    setWaitingForResponse(false);
   };
 
   const restartSimulation = () => {
@@ -167,20 +234,20 @@ export function SimulationChat({ embedded = false }: SimulationChatProps) {
       >
         <form onSubmit={handleSend} className="max-w-xl mx-auto flex gap-3">
           <input
-            disabled={!waitingForResponse}
+            disabled={engineSource === "local" ? !waitingForResponse : !isConnected}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder={
-              waitingForResponse
-                ? "Digite uma mensagem..."
-                : "Aguardando resposta do bot..."
+              engineSource === "socket"
+                ? (isConnected ? "Digite uma mensagem (Live)..." : "Socket desconectado...")
+                : (waitingForResponse ? "Digite uma mensagem..." : "Aguardando bot...")
             }
             className="flex-1 bg-bg-start border border-border-ui rounded-2xl px-5 py-3 text-sm text-text-primary focus:border-primary outline-none transition-all placeholder:text-text-secondary/30 disabled:opacity-50"
           />
           <button
             type="submit"
-            disabled={!waitingForResponse}
-            style={{ backgroundColor: waitingForResponse ? mainColor : undefined }}
+            disabled={engineSource === "local" ? !waitingForResponse : !isConnected}
+            style={{ backgroundColor: (engineSource === "local" ? waitingForResponse : isConnected) ? mainColor : undefined }}
             className="w-12 h-12 text-white rounded-2xl flex items-center justify-center hover:opacity-90 transition-all shadow-lg active:scale-95 disabled:grayscale disabled:opacity-50"
           >
             <Send size={20} />

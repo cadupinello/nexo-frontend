@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
+import { interpolate } from "../../../utils/interpolate";
 import { useFlowStore } from "../store/flow.store";
 
 export function useFlowExecutor() {
   const mode = useFlowStore((state) => state.mode);
   const activeNodeId = useFlowStore((state) => state.activeNodeId);
   const waitingForResponse = useFlowStore((state) => state.waitingForResponse);
+  const engineSource = useFlowStore((state) => state.engineSource);
   const lastLoggedNodeId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -14,21 +16,26 @@ export function useFlowExecutor() {
         setActiveNodeId,
         clearSimulationLogs,
         setWaitingForResponse,
+        engineSource: currentSource,
       } = useFlowStore.getState();
 
       clearSimulationLogs();
       setWaitingForResponse(false);
       lastLoggedNodeId.current = null;
 
-      const startNode = nodes.find((n) => n.type === "start");
-      if (startNode) {
-        setActiveNodeId(startNode.id);
+      if (currentSource === "local") {
+        const startNode = nodes.find((n) => n.type === "start");
+        if (startNode) {
+          setActiveNodeId(startNode.id);
+        }
+      } else {
+        setActiveNodeId(null);
       }
     } else {
       useFlowStore.getState().setActiveNodeId(null);
       lastLoggedNodeId.current = null;
     }
-  }, [mode]);
+  }, [mode, engineSource]);
 
   const next = () => {
     const currentState = useFlowStore.getState();
@@ -52,13 +59,31 @@ export function useFlowExecutor() {
           .find((l) => l.type === "user")
           ?.message.toLowerCase() || "";
 
-      // Lógica simples de decisão: se tiver 'sim', 'ok', 'quero' ou 'yes', vai pelo SIM
-      const positiveWords = ["sim", "ok", "quero", "yes", "s", "true", "bora"];
-      const isPositive = positiveWords.some((word) =>
-        lastUserMessage.includes(word),
-      );
+      // Se a condição tiver um valor específico para comparar
+      const matchValue = (
+        currentNode.data?.matchValue as string
+      )?.toLowerCase();
 
-      targetHandle = isPositive ? "yes" : "no";
+      if (matchValue) {
+        targetHandle = lastUserMessage === matchValue ? "yes" : "no";
+      } else {
+        // Lógica simples de decisão: se tiver 'sim', 'ok', 'quero' ou 'yes', vai pelo SIM
+        const positiveWords = [
+          "sim",
+          "ok",
+          "quero",
+          "yes",
+          "s",
+          "true",
+          "bora",
+          "1",
+          "confirmar",
+        ];
+        const isPositive = positiveWords.some((word) =>
+          lastUserMessage.includes(word),
+        );
+        targetHandle = isPositive ? "yes" : "no";
+      }
     }
 
     // Busca a conexão saindo do nó atual
@@ -77,8 +102,14 @@ export function useFlowExecutor() {
 
   // Loop de Simulação
   useEffect(() => {
-    // Se estivermos esperando resposta, ou não estivermos em simulação, paramos o loop
-    if (mode !== "simulate" || !activeNodeId || waitingForResponse) return;
+    // Se estivermos esperando resposta, ou não estivermos em simulação, ou o motor for o socket, paramos o loop local
+    if (
+      mode !== "simulate" ||
+      !activeNodeId ||
+      waitingForResponse ||
+      engineSource === "socket"
+    )
+      return;
 
     const { nodes, addSimulationLog, setWaitingForResponse } =
       useFlowStore.getState();
@@ -91,13 +122,20 @@ export function useFlowExecutor() {
       lastLoggedNodeId.current = activeNodeId;
 
       if (currentNode.type === "message") {
+        const rawMessage =
+          (currentNode.data?.content as string) ||
+          (currentNode.data?.label as string);
+
         addSimulationLog({
           type: "message",
           nodeId: currentNode.id,
-          message:
-            (currentNode.data?.content as string) ||
-            (currentNode.data?.label as string),
+          message: interpolate(rawMessage),
         });
+
+        if (currentNode.data?.waitResponse) {
+          setWaitingForResponse(true);
+          return;
+        }
       } else if (currentNode.type === "action") {
         addSimulationLog({
           type: "action",
@@ -105,12 +143,14 @@ export function useFlowExecutor() {
           message: `Executando: ${currentNode.data?.label || "Ação"}`,
         });
       } else if (currentNode.type === "condition") {
+        const rawCriteria =
+          (currentNode.data?.criteria as string) ||
+          "Por favor, responda para continuar:";
+
         addSimulationLog({
           type: "message",
           nodeId: currentNode.id,
-          message:
-            (currentNode.data?.criteria as string) ||
-            "Por favor, responda para continuar:",
+          message: interpolate(rawCriteria),
         });
 
         // Pausa a simulação e espera input do usuário

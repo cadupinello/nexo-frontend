@@ -3,19 +3,21 @@ import { useChatBuilderStore } from "../store/chat-builder-store"
 
 export function WidgetPreview() {
   const { getActiveSettings } = useChatBuilderStore()
+  const chatConfig = getActiveSettings()
+  const settings = chatConfig?.settings || (chatConfig as any)
   const {
-    mainColor,
-    position,
-    botName,
-    borderRadius,
-    buttonIcon,
-    welcomeMessage,
-    headerBackgroundColor,
-    headerTextColor,
-    userBubbleColor,
-    botBubbleColor,
-    botTextColor
-  } = getActiveSettings()
+    mainColor = "#3b82f6",
+    position = "right",
+    botName = "Assistant",
+    borderRadius = "medium",
+    buttonIcon = "default",
+    welcomeMessage = "Olá! Como posso ajudar você hoje?",
+    headerBackgroundColor = "#3b82f6",
+    headerTextColor = "#ffffff",
+    userBubbleColor = "#3b82f6",
+    botBubbleColor = "#f1f5f9",
+    botTextColor = "#1e293b"
+  } = settings
 
   const radiusClasses = {
     none: "rounded-none",
@@ -32,27 +34,28 @@ export function WidgetPreview() {
   const Icon = icons[buttonIcon as keyof typeof icons] || MessageCircle
 
   return (
-    <div className="flex-1 bg-bg-end/50 relative overflow-hidden flex items-center justify-center">
+    <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-bg-end/50">
       <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 0)', backgroundSize: '24px 24px' }} />
 
-      <div className="text-center z-0">
-        <span className="text-text-secondary/10 font-black text-6xl uppercase tracking-[0.3em] select-none block">
+      <div className="z-0 text-center">
+        <span className="block select-none text-6xl font-black uppercase tracking-[0.3em] text-text-secondary/10">
           Preview
         </span>
-        <span className="text-text-secondary/5 font-bold text-xl uppercase tracking-[0.2em] select-none mt-2 block">
+        <span className="block mt-2 select-none text-xl font-bold uppercase tracking-[0.2em] text-text-secondary/5">
           Ambiente do Site
         </span>
       </div>
 
-      <div className={`absolute bottom-10 ${position === 'right' ? 'right-10' : 'left-10'} flex flex-col items-end gap-5 w-full max-w-[320px]`}>
+      <div className={`absolute bottom-10 ${position === 'right' ? 'right-10' : 'left-10'} flex w-full max-w-[320px] flex-col items-end gap-5`}>
 
-        <div className={`bg-panel border border-border-ui shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-700 w-full overflow-hidden transition-all ${radiusClasses[(borderRadius === 'full' ? 'medium' : borderRadius) as keyof typeof radiusClasses]}`}>
+        <div className={`card overflow-hidden border border-border-ui bg-panel shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-4 duration-700 ${radiusClasses[(borderRadius === 'full' ? 'medium' : borderRadius) as keyof typeof radiusClasses]}`}>
+          {/* Header */}
           <div
             style={{ backgroundColor: headerBackgroundColor, color: headerTextColor }}
-            className="p-4 flex items-center gap-3"
+            className="flex items-center gap-3 p-4"
           >
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-              <div className="w-2 h-2 rounded-full bg-success shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+              <div className="h-2 w-2 rounded-full bg-success shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
             </div>
             <div>
               <p className="text-xs font-black uppercase tracking-wider">{botName}</p>
@@ -60,47 +63,50 @@ export function WidgetPreview() {
             </div>
           </div>
 
-          <div className="p-4 space-y-3 bg-bg-start/50">
-            <div className="flex flex-col items-start gap-1">
+          {/* Chat Body */}
+          <div className="space-y-4 bg-bg-start/50 p-4">
+            <div className="chat chat-start">
               <div
                 style={{ backgroundColor: botBubbleColor, color: botTextColor }}
-                className={`p-3 text-xs shadow-sm max-w-[85%] ${radiusClasses.medium} rounded-bl-none`}
+                className="chat-bubble min-h-0 text-xs shadow-sm leading-relaxed"
               >
                 {welcomeMessage || "Olá! Como posso ajudar você hoje?"}
               </div>
             </div>
 
-            <div className="flex flex-col items-end gap-1">
+            <div className="chat chat-end">
               <div
                 style={{ backgroundColor: userBubbleColor, color: '#fff' }}
-                className={`p-3 text-xs shadow-sm max-w-[85%] ${radiusClasses.medium} rounded-br-none`}
+                className="chat-bubble min-h-0 text-xs shadow-sm leading-relaxed"
               >
                 Gostaria de saber mais sobre o plano Pro.
               </div>
             </div>
           </div>
 
-          <div className="p-3 border-t border-border-ui flex gap-2 bg-white/5">
-            <div className="flex-1 h-8 bg-bg-start border border-border-ui rounded-full px-3 flex items-center">
-              <span className="text-[10px] text-text-secondary/50 font-medium">Digite uma mensagem...</span>
+          {/* Input Footer */}
+          <div className="flex gap-2 border-t border-border-ui bg-white/5 p-3">
+            <div className="flex h-8 flex-1 items-center rounded-full border border-border-ui bg-bg-start px-3">
+              <span className="text-[10px] font-medium text-text-secondary/50">Digite uma mensagem...</span>
             </div>
             <div
               style={{ backgroundColor: mainColor }}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-white shadow-lg"
             >
               <ArrowRight size={14} />
             </div>
           </div>
         </div>
 
+        {/* Floating Toggle Button */}
         <button
           style={{ backgroundColor: mainColor }}
-          className={`w-16 h-16 flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all text-white group relative ${radiusClasses[borderRadius as keyof typeof radiusClasses]}`}
+          className={`group relative flex h-16 w-16 items-center justify-center text-white shadow-xl transition-all hover:scale-110 active:scale-95 ${radiusClasses[borderRadius as keyof typeof radiusClasses]}`}
         >
-          <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-inherit" />
+          <div className="absolute inset-0 rounded-inherit bg-white/20 opacity-0 transition-opacity group-hover:opacity-100" />
           <Icon size={28} className="drop-shadow-md" />
         </button>
       </div>
     </div>
-  )
+  );
 }
